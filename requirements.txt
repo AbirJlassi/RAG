@@ -1,0 +1,15 @@
+python -m venv venv
+venv\Scripts\activate
+
+
+langchain>=0.1.13
+faiss-cpu>=1.7.4     # Pour FAISS local. Utilise `faiss-gpu` si tu as CUDA.
+sentence-transformers>=2.2.2
+PyMuPDF>=1.22.0
+streamlit>=1.29.0
+tqdm
+python-dotenv
+langchain_community
+
+pip install -U langchain-huggingface huggingface-hub
+pip install -U langchain-community

@@ -1,0 +1,89 @@
+taxonomie:
+  domaines:
+    - nom: Stratégie SI
+      sous-domaines:
+        - Alignement stratégique
+        - Feuille de route SI
+        - Gouvernance SI
+        - Architecture cible
+    - nom: Audit SI
+      sous-domaines:
+        - Diagnostic de l'existant
+        - Analyse de maturité
+        - Cartographie fonctionnelle
+        - Analyse des risques
+    - nom: Continuité d'activité et gestion de crise
+      sous-domaines:
+        - PCA / PRA
+        - Scénarios de crise
+        - Exercice de simulation
+        - RETEX (Retour d'expérience)
+    - nom: Transformation digitale
+      sous-domaines:
+        - Urbanisation SI
+        - Démarche de digitalisation
+        - E-Gouvernement
+        - Cloud computing
+    - nom: Gouvernance de projet
+      sous-domaines:
+        - Comité de pilotage
+        - Suivi des livrables
+        - Assurance qualité
+        - Conduite du changement
+
+  livrables:
+    - Rapport de cadrage
+    - Diagnostic de l’existant
+    - Benchmark comparatif
+    - Scénarios d’évolution
+    - Architecture cible
+    - Plan de mise en œuvre
+    - Plan de communication
+    - RETEX / Rapport de retour d'expérience
+    - Planning et charges
+    - Cartographie des processus / SI
+
+  méthodologies:
+    - Analyse SWOT
+    - Atelier de co-construction
+    - Benchmark sectoriel
+    - Evaluation de scénarios
+    - Simulation immersive
+    - Animation de cellule de crise
+    - Cartographie des risques
+    - Gestion agile / itérative
+
+  formats_offres:
+    - Offre de cadrage
+    - Offre de pilotage
+    - Offre d’audit
+    - Offre de formation / sensibilisation
+    - Offre de simulation de crise
+    - Offre de planification stratégique
+
+  types_de_projets:
+    - Élaboration de Schéma Directeur
+    - Audit de Système d’Information
+    - Exercice de gestion de crise
+    - Transformation digitale
+    - Mise en conformité ISO 22301 / 27001
+    - Sécurisation SI
+    - Refonte organisationnelle DSI
+
+  acteurs:
+    - Client final
+    - Chef de projet
+    - Experts techniques (cyber, infra, métier)
+    - Consultants SI / Organisation
+    - Sponsors stratégiques
+    - Observateurs / animateurs
+    - Utilisateurs finaux
+    - Comités de pilotage / projets
+
+  secteurs:
+    - Banque / Assurance
+    - Administration publique
+    - Télécom
+    - Santé
+    - Énergie
+    - Retraite et protection sociale
