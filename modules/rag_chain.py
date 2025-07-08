@@ -104,6 +104,7 @@ Rédige en langage clair, professionnel et adapté au secteur d'activité du cli
 """
 
         response = llm.invoke(prompt)
+        response = response.content 
 
         # Stockage pour apprentissage continu (feedforward)
         store_generation(
