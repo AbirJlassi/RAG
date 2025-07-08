@@ -13,3 +13,7 @@ langchain_community
 
 pip install -U langchain-huggingface huggingface-hub
 pip install -U langchain-community
+
+pip install accelerate
+pip install transformers torch langchain accelerate
+pip install -qU langchain-groq
