@@ -1,85 +1,100 @@
-# 📁 modules/rag_chain.py
-
-from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+from sentence_transformers import CrossEncoder
+
 from langchain.text_splitter import RecursiveCharacterTextSplitter
-from modules.vectorstore import create_vectorstore
+from langchain.retrievers.multi_query import MultiQueryRetriever
+
+from modules.vectorstore import create_vectorstore, create_bm25_vectorstore
 from modules.loader import load_and_tag_documents
 from modules.llm import get_llm
 from modules.storage import store_generation
+from modules.metrics import evaluate_rag
 
+# 🔐 Charger les variables d'environnement (.env)
 load_dotenv()
 
-# Chargement + enrichissement des documents
+# 🎯 Reranker CrossEncoder
+reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
+
+# 📥 Charger et enrichir les documents
 docs = load_and_tag_documents("data/")
 
-# Chunking avec split logique
-splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=150)
+# ✂️ Chunking des documents (chunks plus courts pour plus de précision)
+splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
 chunks = splitter.split_documents(docs)
 
-# Création du vecteur index
-vectorstore = create_vectorstore(chunks)
-retriever = vectorstore.as_retriever(search_kwargs={"k": 4})
+# 🧠 Création des vecteurs FAISS (denses) et BM25 (sparse)
+faiss_vectorstore = create_vectorstore(chunks)
+bm25_vectorstore = create_bm25_vectorstore(chunks)
+
+# 🔍 Création des retrievers
+retriever_faiss = faiss_vectorstore.as_retriever(search_kwargs={"k": 8})
+retriever_bm25 = bm25_vectorstore
+
+# 🔁 Fusion manuelle des résultats FAISS + BM25
+def hybrid_retrieve(query, retriever1, retriever2, top_k=8):
+    results1 = retriever1.get_relevant_documents(query)
+    results2 = retriever2.get_relevant_documents(query)
+
+    # Fusionner les documents sans doublons
+    seen = set()
+    combined = []
+    for doc in results1 + results2:
+        if doc.page_content not in seen:
+            seen.add(doc.page_content)
+            combined.append(doc)
+        if len(combined) >= top_k:
+            break
+    return combined
+
+# 🤖 Chargement du modèle LLM
 llm = get_llm()
 
+# 🚀 Fonction principale : génère réponse + évalue la qualité
 def generate_response(query, filters=None):
     """
-    Génère une réponse propale enrichie et structurée, avec tracking pour apprentissage continu
-    
-    Args:
-        query (str): Question/demande de l'utilisateur
-        filters (dict, optional): Filtres taxonomiques (secteur, domaine, etc.)
+    Génère une propale structurée à partir des documents internes,
+    puis évalue la qualité de la réponse RAG.
     """
     try:
-        # Configuration de la recherche avec filtres
-        search_kwargs = {"k": 4}
-        
-        # Application des filtres si fournis
+        # === 1. Application éventuelle des filtres ===
+        search_kwargs = {"k": 8}
         if filters:
-            # Conversion des filtres en critères de recherche
-            filter_conditions = {}
-            for key, value in filters.items():
-                if value:  # Ignore les valeurs vides
-                    filter_conditions[key] = value
-            
+            filter_conditions = {k: v for k, v in filters.items() if v}
             if filter_conditions:
                 search_kwargs["filter"] = filter_conditions
 
-        # Recherche des chunks pertinents (avec ou sans filtres)
-        context_docs = retriever.get_relevant_documents(query)
-        
-        # Filtrage post-recherche si nécessaire (fallback)
-        if filters and context_docs:
-            filtered_docs = []
-            for doc in context_docs:
-                doc_metadata = doc.metadata
-                match = True
-                for key, value in filters.items():
-                    if value and doc_metadata.get(key) != value:
-                        match = False
-                        break
-                if match:
-                    filtered_docs.append(doc)
-            
-            # Utiliser les docs filtrés si disponibles, sinon garder tous
+        # === 2. Récupération hybride FAISS + BM25 ===
+        context_docs = hybrid_retrieve(query, retriever_faiss, retriever_bm25, top_k=8)
+
+        # === 3. Reranking avec CrossEncoder ===
+        if context_docs:
+            pairs = [[query, doc.page_content] for doc in context_docs]
+            scores = reranker.predict(pairs)
+            context_docs = [doc for _, doc in sorted(zip(scores, context_docs), key=lambda x: -x[0])]
+
+        # === 4. Filtrage post-retrieval (fallback) ===
+        if filters:
+            filtered_docs = [
+                doc for doc in context_docs
+                if all(doc.metadata.get(k) == v for k, v in filters.items() if v)
+            ]
             context_docs = filtered_docs if filtered_docs else context_docs
-        
+
         if not context_docs:
             return "Aucun contenu pertinent trouvé dans la base de connaissance."
 
-        # Construction du contexte et métadonnées
+        # === 5. Construction du contexte ===
         context = "\n\n".join([doc.page_content for doc in context_docs])
         tags = context_docs[0].metadata if context_docs else {}
-        
-        # Enrichissement avec les filtres appliqués
         if filters:
             tags.update({"filtres_appliques": filters})
 
-        # Construction du prompt professionnel structuré
+        # === 6. Prompt pour génération de propale ===
         filter_info = f"\n🎯 Filtres appliqués : {filters}" if filters else ""
-        
         prompt = f"""
-Tu es le consultant expert virtuel de l'entreprise SKILLIA, chargé de générer une proposition commerciale structurée, écrite en FRANCAIS et pas en anglais,  à partir des documents internes de l’entreprise.
+Tu es le consultant expert virtuel de l'entreprise SKILLIA, chargé de générer une proposition commerciale structurée, écrite en FRANCAIS à partir des documents internes de l’entreprise.
 
 📌 Demande utilisateur :
 {query}{filter_info}
@@ -87,34 +102,48 @@ Tu es le consultant expert virtuel de l'entreprise SKILLIA, chargé de générer
 📚 Contexte extrait :
 {context}
 
-🔖 Métadonnées associées (secteur, domaine, sous-domaine, livrables, client, durée, TJM) :
+🔖 Métadonnées associées :
 {tags}
 
 ✍️ La propale doit inclure :
 1. Contexte client
 2. Objectifs et enjeux identifiés
-3. Démarche ou méthodologie recommandée (avec références à la taxonomie si possible)
-4. Livrables attendus ou livrables similaires observés
-5. Planning estimé (phases, charges)
-6. Budget indicatif ou TJM (si détecté)
+3. Démarche ou méthodologie recommandée
+4. Livrables attendus
+5. Planning estimé
+6. Budget indicatif ou TJM
 7. Valeur ajoutée de l'approche proposée
 
-🧩 Utilise la taxonomie interne (domaines, livrables, méthodes) pour structurer au mieux ta réponse.
-Rédige en langage clair, professionnel et adapté au secteur d'activité du client.
+🧩 Utilise la taxonomie interne pour structurer au mieux ta réponse.
 """
 
-        response = llm.invoke(prompt)
-        response = response.content 
+        # === 7. Génération de réponse via LLM ===
+        response = llm.invoke(prompt).content
 
-        # Stockage pour apprentissage continu (feedforward)
+        # === 8. Sauvegarde de la génération ===
         store_generation(
-            query=query, 
-            context=context, 
-            metadata={**tags, **(filters or {})}, 
+            query=query,
+            context=context,
+            metadata={**tags, **(filters or {})},
             response=response
         )
 
-        return response
+        # === 9. Évaluation RAG (qualité du retrieval et de la génération) ===
+        reference_docs = []  # Mettre ici tes documents de vérité si disponibles
+        retrieved_texts = [doc.page_content for doc in context_docs]
+
+        metrics_report = evaluate_rag(
+            query=query,
+            generated_answer=response,
+            retrieved_docs=retrieved_texts,
+            reference_docs=reference_docs
+        )
+
+        # ✅ 10. Retourner la réponse + les métriques
+        return {
+            "response": response,
+            "metrics": metrics_report
+        }
 
     except Exception as e:
         return f"❌ Erreur dans generate_response: {str(e)}"

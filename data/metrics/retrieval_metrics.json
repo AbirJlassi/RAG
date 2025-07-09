@@ -1,0 +1,68 @@
+[
+  {
+    "query": "donne propale pour un chat  bot conversationnel pour banque X",
+    "timestamp": "2025-07-08T12:04:32.195321",
+    "num_docs_retrieved": 4,
+    "avg_similarity": 0.5,
+    "content_coverage": 0.1013,
+    "metadata_richness": 0.6667,
+    "retrieval_time": 0.0115,
+    "total_content_length": 405,
+    "filters_applied": {
+      "secteur": "Banque / Assurance",
+      "domaine": "Stratégie SI"
+    },
+    "docs_before_filter": 4,
+    "docs_after_filter": 4,
+    "filter_effectiveness": 1.0,
+    "response_generated": true,
+    "response_length": 3796,
+    "llm_response_time": 3.9900436401367188,
+    "total_processing_time": 4.00570273399353,
+    "error_message": null
+  },
+  {
+    "query": "donne propale pour un chat  bot conversationnel pour banque X",
+    "timestamp": "2025-07-08T12:10:56.092992",
+    "num_docs_retrieved": 4,
+    "avg_similarity": 0.5,
+    "content_coverage": 0.1013,
+    "metadata_richness": 0.6667,
+    "retrieval_time": 0.0233,
+    "total_content_length": 405,
+    "filters_applied": {
+      "secteur": "Banque / Assurance",
+      "domaine": "Stratégie SI"
+    },
+    "docs_before_filter": 4,
+    "docs_after_filter": 4,
+    "filter_effectiveness": 1.0,
+    "response_generated": true,
+    "response_length": 3326,
+    "llm_response_time": 4.847306489944458,
+    "total_processing_time": 4.872318744659424,
+    "error_message": null
+  },
+  {
+    "query": "propale d'un chat bot conversationnel ",
+    "timestamp": "2025-07-08T12:12:57.706241",
+    "num_docs_retrieved": 4,
+    "avg_similarity": 0.5,
+    "content_coverage": 0.6382,
+    "metadata_richness": 0.6667,
+    "retrieval_time": 0.0468,
+    "total_content_length": 2553,
+    "filters_applied": {
+      "secteur": "Banque / Assurance",
+      "domaine": "Stratégie SI"
+    },
+    "docs_before_filter": 4,
+    "docs_after_filter": 4,
+    "filter_effectiveness": 1.0,
+    "response_generated": true,
+    "response_length": 3304,
+    "llm_response_time": 3.68405818939209,
+    "total_processing_time": 3.731461524963379,
+    "error_message": null
+  }
+]
