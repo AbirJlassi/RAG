@@ -6,11 +6,18 @@ import numpy as np
 # Load embedding model
 model = SentenceTransformer("all-MiniLM-L6-v2")
 
+# filepath: /home/tasniml/RAG/modules/metrics.py
 def embed(texts: List[str]) -> np.ndarray:
-    return model.encode(texts, convert_to_tensor=True)
+    if not texts:
+        # Return an empty 2D array with the correct embedding dimension
+        return np.empty((0, model.get_sentence_embedding_dimension()))
+    return model.encode(texts, convert_to_tensor=False)
 
+# filepath: /home/tasniml/RAG/modules/metrics.py
 def cosine_sim(a, b) -> float:
     """Compute cosine similarity between two vectors."""
+    if a.size == 0 or b.size == 0:
+        return 0.0  # Return 0 similarity if any input is empty
     return float(cosine_similarity([a], [b])[0][0])
 
 def semantic_context_recall(retrieved: List[str], reference: List[str], threshold=0.75) -> float:
@@ -52,13 +59,20 @@ def context_relevance(retrieved: List[str], reference: List[str]) -> float:
     reference_text = "\n".join(reference)
     return cosine_sim(embed([retrieved_text])[0], embed([reference_text])[0])
 
+# filepath: /home/tasniml/RAG/modules/metrics.py
 def evaluate_rag(
     query: str,
-    generated_answer: str,  # Ignored if no reference answer
+    generated_answer: str,
     retrieved_docs: List[str],
     reference_docs: List[str],
     reference_answer: str = ""
 ) -> dict:
+    if not retrieved_docs or not reference_docs:
+        return {
+            "semantic_context_recall": 0.0,
+            "semantic_precision": 0.0,
+            "context_relevance": 0.0
+        }
     return {
         "semantic_context_recall": semantic_context_recall(retrieved_docs, reference_docs),
         "semantic_precision": semantic_precision(retrieved_docs, reference_docs),
