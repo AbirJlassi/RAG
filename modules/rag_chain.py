@@ -20,7 +20,7 @@ reranker = CrossEncoder('cross-encoder/ms-marco-MiniLM-L-6-v2')
 docs = load_and_tag_documents("data/")
 
 # ✂️ Chunking (chunks courts pour + de pertinence)
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=100)
+splitter = RecursiveCharacterTextSplitter(chunk_size=800, chunk_overlap=150)
 chunks = splitter.split_documents(docs)
 
 # 🧠 Création des vecteurs
@@ -28,7 +28,7 @@ faiss_vectorstore = create_vectorstore(chunks)
 bm25_vectorstore = create_bm25_vectorstore(chunks)  # BM25 n'a pas .as_retriever()
 
 # 🔁 Fusion manuelle des résultats FAISS + BM25
-def hybrid_retrieve(query, retriever1, retriever2, top_k=8):
+def hybrid_retrieve(query, retriever1, retriever2, top_k=12):
     """
     Combine les résultats de FAISS (dense) et BM25 (sparse) de façon manuelle
     """
@@ -66,7 +66,7 @@ def generate_response(query, filters=None):
     try:
         # === 1. Récupération hybride ===
         context_docs = hybrid_retrieve(query, 
-                               faiss_vectorstore.as_retriever(search_kwargs={"k": 8}), 
+                               faiss_vectorstore.as_retriever(search_kwargs={"k": 12}), 
                                bm25_vectorstore, 
                                top_k=8)
 
