@@ -1,4 +1,21 @@
-*.env
+# 🔒 Fichiers d'environnement
 .env
+*.env
+
+# 🐍 Environnements virtuels Python
+venv/
 .venv/
-__pycache__/venv/
+
+# ⚙️ Caches Python
+__pycache__/
+*.py[cod]
+
+# 📦 Fichiers de modèles ou données
+*.pt
+*.npy
+*.pkl
+*.h5
+*.csv
+
+# 📓 Notebooks
+.ipynb_checkpoints/
