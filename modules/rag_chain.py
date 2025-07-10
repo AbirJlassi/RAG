@@ -66,9 +66,14 @@ def generate_response(query, filters=None):
     try:
         # === 1. Récupération hybride ===
         context_docs = hybrid_retrieve(query, 
-                                       faiss_vectorstore.as_retriever(search_kwargs={"k": 8}), 
-                                       bm25_vectorstore, 
-                                       top_k=8)
+                               faiss_vectorstore.as_retriever(search_kwargs={"k": 8}), 
+                               bm25_vectorstore, 
+                               top_k=8)
+
+        valid_context_docs = [doc for doc in context_docs if doc.page_content and doc.page_content.strip()]
+        if not valid_context_docs:
+            print("No valid context documents found.")
+            return "Aucun contenu pertinent trouvé dans la base de connaissance."
 
         # === 2. Reranking CrossEncoder (si documents présents) ===
         if context_docs:
@@ -143,22 +148,33 @@ def generate_response(query, filters=None):
             response=response
         )
 
-        # === 8. Évaluation (RAG metrics) ===
+        # === 8. Évaluation (RAG metrics) - SIMPLIFIED ===
         try:
-            reference_docs = []  # À remplir si tu as des documents de référence
-            reference_answer = ""  # Optionnel
             retrieved_texts = [doc.page_content for doc in valid_context_docs]
-
+            print(f"Evaluating with {len(retrieved_texts)} retrieved documents")
+            
+            # Use the new metrics that don't require reference documents
             metrics_report = evaluate_rag(
                 query=query,
                 generated_answer=response,
-                retrieved_docs=retrieved_texts,
-                reference_docs=reference_docs,
-                reference_answer=reference_answer
+                retrieved_docs=retrieved_texts
             )
+            
+            print("=== RAG EVALUATION RESULTS ===")
+            for metric, score in metrics_report.items():
+                print(f"{metric}: {score}")
+            print("===============================")
+            
         except Exception as e:
             print(f"Erreur lors de l'évaluation des métriques: {traceback.format_exc()}")
-            metrics_report = {}
+            metrics_report = {
+                "query_document_relevance": 0.0,
+                "answer_faithfulness": 0.0,
+                "answer_relevance": 0.0,
+                "context_diversity": 0.0,
+                "answer_completeness": 0.0,
+                "overall_score": 0.0
+            }
 
         return {
             "response": response,
