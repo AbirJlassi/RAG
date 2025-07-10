@@ -1,4 +1,9 @@
+venv/
+.venv/
 *.env
 .env
-.venv/
 __pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.pkl   

@@ -1,5 +1,5 @@
 # 1. main.py (lancement principal)
-from ui.app import run_app
+from ui.enhanced_app import run_enhanced_app
 
 if __name__ == '__main__':
-    run_app()
+    run_enhanced_app()
